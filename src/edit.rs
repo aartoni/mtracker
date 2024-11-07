@@ -54,12 +54,9 @@ fn edit_db_entry(repo: &mut repo::Repo, handle: &handle::Handle) -> Result<()> {
     Ok(())
 }
 
-fn edit_db(repo: &mut repo::Repo) -> Result<()> {
+fn edit_db(repo: &repo::Repo) -> Result<()> {
     // Get original db
-    let original_db = match std::fs::read_to_string(&repo.path) {
-        Ok(content) => content,
-        Err(_) => String::new(),
-    };
+    let original_db = std::fs::read_to_string(&repo.path).unwrap_or_default();
 
     // Copy original db to tempfile
     let mut tmp_file = tempfile::NamedTempFile::new().unwrap();

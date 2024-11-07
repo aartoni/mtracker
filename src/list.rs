@@ -65,10 +65,7 @@ pub fn handle(repo: &mut media::repo::Repo, matches: &ArgMatches) -> Result<()> 
     // Filter by year
     if let Some(y) = year {
         let (min, max) = get_year_min_max(y)?;
-        items.retain(|i| match i.year {
-            Some(y) => y >= min && y <= max,
-            None => false,
-        });
+        items.retain(|i| i.year.map_or(false, |y| y >= min && y <= max));
     }
 
     // Sort (watchlist, rating, unrated, alphabetic)

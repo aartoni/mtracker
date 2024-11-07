@@ -4,28 +4,20 @@ use chrono;
 use crate::media;
 
 // (key, value)
-fn parse_prop<'a, T: std::str::FromStr>(arg: (&'a str, &'a str)) -> Result<Option<T>>
+fn parse_prop<'a, T: std::str::FromStr>(arg: (&'a str, &'a str)) -> Result<T>
 where
     <T as std::str::FromStr>::Err: std::fmt::Display,
 {
-    match str::parse::<T>(arg.1) {
-        Ok(v) => Ok(Some(v)),
-        Err(e) => Err(anyhow!("failed to parse {}: {e}", arg.0)),
-    }
+    str::parse::<T>(arg.1).map_err(|e| anyhow!("failed to parse {}: {e}", arg.0))
 }
 
-fn parse_last_seen(input: &str) -> Result<Option<chrono::NaiveDate>> {
-    match chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d") {
-        Ok(date) => Ok(Some(date)),
-        Err(e) => Err(anyhow!(
-            "failed to parse last_seen: {e}\nExpected format: 2024-12-31"
-        )),
-    }
+fn parse_last_seen(input: &str) -> Result<chrono::NaiveDate> {
+    chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d")
+        .map_err(|e| anyhow!("failed to parse last_seen: {e}\nExpected format: 2024-12-31"))
 }
 
 fn parse_tags(input: &str) -> Result<Vec<String>> {
     let tags: Vec<String> = parse_prop::<String>(("tags", input))?
-        .unwrap()
         .split(',')
         .map(str::trim)
         .map(str::to_string)
@@ -69,11 +61,11 @@ impl media::Media {
             };
 
             match key {
-                "year" => year = parse_prop::<u16>((key, value))?,
-                "rating" => rating = parse_prop::<u8>((key, value))?,
-                "note" => note = parse_prop::<String>((key, value))?.unwrap(),
+                "year" => year = parse_prop::<u16>((key, value))?.into(),
+                "rating" => rating = parse_prop::<u8>((key, value))?.into(),
+                "note" => note = parse_prop::<String>((key, value))?,
                 "tags" => tags = parse_tags(value)?,
-                "last_seen" => last_seen = parse_last_seen(value)?,
+                "last_seen" => last_seen = parse_last_seen(value)?.into(),
                 _ => return Err(anyhow!("unknown key: {key}")),
             };
         }
